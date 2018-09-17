@@ -1,0 +1,17 @@
+apply plugin: 'java-library'
+
+dependencies {
+//    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    compileOnly files('libs/android-ori.jar')
+    compileOnly files('libs/support-compat.jar')
+    compileOnly files('libs/core-ui.jar')
+    compileOnly files('libs/core-utils.jar')
+    compileOnly files('libs/support-fragment.jar')
+    compileOnly files('libs/support-v7.jar')
+    compileOnly files('libs/internal_impl-compat.jar')
+    compileOnly files('libs/internal_impl-core-ui.jar')
+    compileOnly files('libs/internal_impl-fragment.jar')
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"

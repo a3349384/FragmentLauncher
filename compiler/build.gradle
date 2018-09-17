@@ -1,0 +1,10 @@
+apply plugin: 'java-library'
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation project(':library')
+    implementation 'com.squareup:javapoet:1.10.0'
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
