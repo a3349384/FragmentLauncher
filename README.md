@@ -75,3 +75,9 @@ public static void startToTest(Context context, Parcelable[] parcelableArrayArg,
 当你需要启动`TestFragment`时，你只需要调用`Launcher#startToTest`，FragmentLauncher会自动将相关参数打包为Bundle并传递给你上面初始化的`cn.zmy.fragmentlauncher.IFragmentLaunchHandler`实例。
 
 目前，FragmentLauncher支持除`SparseArray<? extends Parcelable>`类型之外的所有其他类型的参数。
+
+3. 最后
+
+FragmentLauncher实际上并为真正意义上帮助你启动Fragment，而是通过`@Launcher`、`@Arg`、`@ArrayListArg`等注解帮助你将相关参数打包为Bundle，然后传递给指定的Handler接口。
+
+你需要自己实现Handler接口来完成最终的启动。
