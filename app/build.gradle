@@ -21,9 +21,17 @@ android {
     }
 }
 
+repositories {
+    maven {
+        url 'https://dl.bintray.com/a3349384/maven'
+    }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:24.2.0'
-    annotationProcessor project(':compiler')
-    implementation project(':library')
+
+    implementation 'cn.zmy:fragmentlauncher-library:1.0.0'
+//    annotationProcessor 'cn.zmy:fragmentlauncher-compiler:1.0.0'
+    annotationProcessor project(":compiler")
 }

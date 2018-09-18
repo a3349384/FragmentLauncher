@@ -28,7 +28,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
+import cn.zmy.fragmentlauncher.Arg;
 import cn.zmy.fragmentlauncher.Args;
+import cn.zmy.fragmentlauncher.ArrayListArg;
 import cn.zmy.fragmentlauncher.ArrayListArgs;
 import cn.zmy.fragmentlauncher.Launch;
 
@@ -81,6 +83,8 @@ public class LaunchProcessor extends AbstractProcessor
         types.add(Launch.class.getCanonicalName());
         types.add(Args.class.getCanonicalName());
         types.add(ArrayListArgs.class.getCanonicalName());
+        types.add(Arg.class.getCanonicalName());
+        types.add(ArrayListArg.class.getCanonicalName());
         return types;
     }
 
@@ -111,6 +115,17 @@ public class LaunchProcessor extends AbstractProcessor
                         break;
                     }
                 }
+                continue;
+            }
+            boolean isArg = annotaionName.contentEquals(Arg.class.getCanonicalName());
+            boolean isArrayListArg = annotaionName.contentEquals(ArrayListArg.class.getCanonicalName());
+            if (isArg || isArrayListArg)
+            {
+                ArgModel argModel = parseArg(annotationMirror, isArrayListArg);
+                if (argModel != null)
+                {
+                    args.add(argModel);
+                }
             }
         }
         return args;
@@ -119,37 +134,47 @@ public class LaunchProcessor extends AbstractProcessor
     private List<ArgModel> parseArgs(List<AnnotationMirror> mirrors, boolean isArrayList)
     {
         List<ArgModel> args = new ArrayList<>();
-        if (mirrors == null || mirrors.size() == 0)
+        if (mirrors == null)
         {
             return args;
         }
         for (AnnotationMirror argMirror : mirrors)
         {
-            String name = null;
-            TypeMirror typeMirror = null;
-            Map<? extends ExecutableElement,? extends AnnotationValue> map = argMirror.getElementValues();
-            for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+            ArgModel argModel = parseArg(argMirror, isArrayList);
+            if (argModel != null)
             {
-                switch (entry.getKey().getSimpleName().toString())
-                {
-                    case "name":
-                    {
-                        name = entry.getValue().getValue().toString();
-                        break;
-                    }
-                    case "type":
-                    {
-                        typeMirror = (TypeMirror) entry.getValue().getValue();
-                        break;
-                    }
-                }
-            }
-            if (name != null && typeMirror != null)
-            {
-                args.add(new ArgModel(name, typeMirror, isArrayList));
+                args.add(argModel);
             }
         }
         return args;
+    }
+
+    private ArgModel parseArg(AnnotationMirror argMirror, boolean isArrayList)
+    {
+        String name = null;
+        TypeMirror typeMirror = null;
+        Map<? extends ExecutableElement,? extends AnnotationValue> map = argMirror.getElementValues();
+        for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+        {
+            switch (entry.getKey().getSimpleName().toString())
+            {
+                case "name":
+                {
+                    name = entry.getValue().getValue().toString();
+                    break;
+                }
+                case "type":
+                {
+                    typeMirror = (TypeMirror) entry.getValue().getValue();
+                    break;
+                }
+            }
+        }
+        if (name != null && typeMirror != null)
+        {
+            return new ArgModel(name, typeMirror, isArrayList);
+        }
+        return null;
     }
 
     private void generateCode(List<GenerateModel> generateModels)
