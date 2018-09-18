@@ -1,4 +1,8 @@
 apply plugin: 'java-library'
+apply plugin: 'com.novoda.bintray-release'
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
 
 dependencies {
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -13,5 +17,13 @@ dependencies {
     compileOnly files('libs/internal_impl-fragment.jar')
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+publish {
+    userOrg = 'a3349384'
+    groupId = 'cn.zmy'
+    artifactId = 'fragmentlauncher-library'
+    publishVersion = '1.0.0'
+    desc = 'https://github.com/a3349384/FragmentLauncher'
+    website = 'https://github.com/a3349384/FragmentLauncher'
+}
+
+

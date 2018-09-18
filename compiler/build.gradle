@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation project(':library')
+    implementation 'cn.zmy:fragmentlauncher-library:1.0.0'
     implementation 'com.squareup:javapoet:1.10.0'
 }
 

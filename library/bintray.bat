@@ -1,0 +1,1 @@
+gradle assemble bintrayUpload -PbintrayUser=a3349384 -PbintrayKey=%1 -PdryRun=false
