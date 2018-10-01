@@ -3,6 +3,7 @@ package cn.zmy.fragmentlauncher.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -11,7 +12,7 @@ import javax.lang.model.type.TypeMirror;
 
 public class GenerateModel
 {
-    private TypeMirror fragmentMirror;
+    private TypeElement fragmentElement;
     private String methodName;
     private List<ArgModel> args;
 
@@ -20,14 +21,14 @@ public class GenerateModel
         args = new ArrayList<>();
     }
 
-    public TypeMirror getFragmentMirror()
+    public TypeElement getFragmentElement()
     {
-        return fragmentMirror;
+        return fragmentElement;
     }
 
-    public void setFragmentMirror(TypeMirror fragmentMirror)
+    public void setFragmentElement(TypeElement fragmentElement)
     {
-        this.fragmentMirror = fragmentMirror;
+        this.fragmentElement = fragmentElement;
     }
 
     public String getMethodName()

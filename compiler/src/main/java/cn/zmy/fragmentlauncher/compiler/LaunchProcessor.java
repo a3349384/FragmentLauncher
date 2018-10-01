@@ -1,7 +1,11 @@
 package cn.zmy.fragmentlauncher.compiler;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
@@ -67,12 +71,16 @@ public class LaunchProcessor extends AbstractProcessor
                 continue;
             }
             GenerateModel generateModel = new GenerateModel();
-            generateModel.setFragmentMirror(element.asType());
+            generateModel.setFragmentElement((TypeElement) element);
             generateModel.setMethodName(element.getAnnotation(Launch.class).name());
             generateModel.getArgs().addAll(getArgs(element));
             generateModels.add(generateModel);
         }
-        generateCode(generateModels);
+        if (generateModels.size() > 0)
+        {
+            generateLauncher(generateModels);
+            generateArguments(generateModels);
+        }
         return true;
     }
 
@@ -177,12 +185,8 @@ public class LaunchProcessor extends AbstractProcessor
         return null;
     }
 
-    private void generateCode(List<GenerateModel> generateModels)
+    private void generateLauncher(List<GenerateModel> generateModels)
     {
-        if (generateModels == null || generateModels.isEmpty())
-        {
-            return;
-        }
         String packageName = "cn.zmy.fragmentlauncher";
         String launcherClassName = "Launcher";
         TypeSpec.Builder launcherBuilder = TypeSpec.classBuilder(launcherClassName)
@@ -257,7 +261,7 @@ public class LaunchProcessor extends AbstractProcessor
                 }
                 methodBuilder.addStatement("$T.$L($L, $S, $L)", TypeNames.BundleHelper, callMethodName, bundleName, argModel.getName(), argModel.getName());
             }
-            String fragmentClassName = generateModel.getFragmentMirror().toString();
+            String fragmentClassName = generateModel.getFragmentElement().getQualifiedName().toString();
             methodBuilder.addStatement("$T.postHandle(context, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
             launcherBuilder.addMethod(methodBuilder.build());
         }
@@ -269,6 +273,67 @@ public class LaunchProcessor extends AbstractProcessor
         catch (IOException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void generateArguments(List<GenerateModel> generateModels)
+    {
+        for (GenerateModel generateModel : generateModels)
+        {
+            String packageName = ElementUtil.getTypeElementPackage(generateModel.getFragmentElement());
+            String className = generateModel.getFragmentElement().getSimpleName().toString() + "Arguments";
+            TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+
+            //instance
+            ClassName argumentsClassName = ClassName.get(packageName, className);
+            FieldSpec.Builder instanceFieldBuilder =
+                    FieldSpec.builder(argumentsClassName, "instance", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+            instanceFieldBuilder.initializer("new $T()", argumentsClassName);
+            classBuilder.addField(instanceFieldBuilder.build());
+
+            //mBundle
+            FieldSpec bundleField = FieldSpec.builder(TypeNames.Bundle, "mBundle", Modifier.PRIVATE).build();
+            classBuilder.addField(bundleField);
+
+            //private constructor
+            classBuilder.addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build());
+
+            //initBundle
+            ParameterSpec bundleParameter = ParameterSpec.builder(TypeNames.Bundle, "bundle").build();
+            MethodSpec.Builder initMethodBuilder = MethodSpec.methodBuilder("init")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(bundleParameter)
+                    .addStatement("$N = $N", bundleField, bundleParameter);
+            classBuilder.addMethod(initMethodBuilder.build());
+
+            for (ArgModel argModel : generateModel.getArgs())
+            {
+                TypeName returnType;
+                if (argModel.isArrayList())
+                {
+                    returnType = ParameterizedTypeName.get(TypeNames.ArrayList, TypeName.get(argModel.getTypeMirror()));
+                }
+                else
+                {
+                     returnType = TypeName.get(argModel.getTypeMirror());
+                }
+                MethodSpec.Builder argMethodBuilder = MethodSpec.methodBuilder(argModel.getName())
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(returnType)
+                        .addStatement("return ($T)$N.get($S)", returnType, bundleField, argModel.getName());
+                classBuilder.addMethod(argMethodBuilder.build());
+            }
+
+            JavaFile javaFile = JavaFile.builder(packageName, classBuilder.build()).build();
+            try
+            {
+                javaFile.writeTo(mFiler);
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
