@@ -18,7 +18,7 @@ publish {
     userOrg = 'a3349384'
     groupId = 'cn.zmy'
     artifactId = 'fragmentlauncher-compiler'
-    publishVersion = '1.0.3'
+    publishVersion = '1.1.0'
     desc = 'https://github.com/a3349384/FragmentLauncher'
     website = 'https://github.com/a3349384/FragmentLauncher'
 }
