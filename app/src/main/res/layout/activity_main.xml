@@ -10,6 +10,12 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="启动测试Fragment"
+        android:text="Launch Fragment"
         android:onClick="launchTestFragment"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Launch Fragment For Result"
+        android:onClick="launchTestFragmentForResult"/>
 </LinearLayout>

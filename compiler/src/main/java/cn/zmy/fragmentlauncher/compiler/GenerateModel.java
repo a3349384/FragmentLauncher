@@ -15,6 +15,7 @@ public class GenerateModel
     private TypeElement fragmentElement;
     private String methodName;
     private List<ArgModel> args;
+    private boolean isForResult;
 
     public GenerateModel()
     {
@@ -44,5 +45,15 @@ public class GenerateModel
     public List<ArgModel> getArgs()
     {
         return args;
+    }
+
+    public boolean isForResult()
+    {
+        return isForResult;
+    }
+
+    public void setForResult(boolean forResult)
+    {
+        isForResult = forResult;
     }
 }

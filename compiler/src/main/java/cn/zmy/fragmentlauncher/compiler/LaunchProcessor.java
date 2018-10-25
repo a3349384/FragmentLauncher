@@ -37,6 +37,7 @@ import cn.zmy.fragmentlauncher.Args;
 import cn.zmy.fragmentlauncher.ArrayListArg;
 import cn.zmy.fragmentlauncher.ArrayListArgs;
 import cn.zmy.fragmentlauncher.Launch;
+import cn.zmy.fragmentlauncher.LaunchForResult;
 
 /**
  * Created by zmy on 2018/9/13.
@@ -62,9 +63,10 @@ public class LaunchProcessor extends AbstractProcessor
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment)
     {
-        Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Launch.class);
+        Set<? extends Element> launchElements = roundEnvironment.getElementsAnnotatedWith(Launch.class);
+        Set<? extends Element> launchForResultElements = roundEnvironment.getElementsAnnotatedWith(LaunchForResult.class);
         List<GenerateModel> generateModels = new ArrayList<>();
-        for (Element element : elements)
+        for (Element element : launchElements)
         {
             if (element.getKind() != ElementKind.CLASS)
             {
@@ -74,6 +76,19 @@ public class LaunchProcessor extends AbstractProcessor
             generateModel.setFragmentElement((TypeElement) element);
             generateModel.setMethodName(element.getAnnotation(Launch.class).name());
             generateModel.getArgs().addAll(getArgs(element));
+            generateModels.add(generateModel);
+        }
+        for (Element element : launchForResultElements)
+        {
+            if (element.getKind() != ElementKind.CLASS)
+            {
+                continue;
+            }
+            GenerateModel generateModel = new GenerateModel();
+            generateModel.setFragmentElement((TypeElement) element);
+            generateModel.setMethodName(element.getAnnotation(LaunchForResult.class).name());
+            generateModel.getArgs().addAll(getArgs(element));
+            generateModel.setForResult(true);
             generateModels.add(generateModel);
         }
         if (generateModels.size() > 0)
@@ -89,6 +104,7 @@ public class LaunchProcessor extends AbstractProcessor
     {
         Set<String> types = new HashSet<>();
         types.add(Launch.class.getCanonicalName());
+        types.add(LaunchForResult.class.getCanonicalName());
         types.add(Args.class.getCanonicalName());
         types.add(ArrayListArgs.class.getCanonicalName());
         types.add(Arg.class.getCanonicalName());
@@ -196,7 +212,15 @@ public class LaunchProcessor extends AbstractProcessor
             MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(generateModel.getMethodName())
                                                                 .returns(TypeName.VOID)
                                                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
-            methodBuilder.addParameter(TypeNames.Context, "context");
+            if (generateModel.isForResult())
+            {
+                methodBuilder.addParameter(ClassName.OBJECT, "fragment");
+                methodBuilder.addParameter(ClassName.INT, "requestCode");
+            }
+            else
+            {
+                methodBuilder.addParameter(TypeNames.Context, "context");
+            }
             for (ArgModel argModel : generateModel.getArgs())
             {
                 TypeName argTypeName = TypeName.get(argModel.getTypeMirror());
@@ -262,7 +286,14 @@ public class LaunchProcessor extends AbstractProcessor
                 methodBuilder.addStatement("$T.$L($L, $S, $L)", TypeNames.BundleHelper, callMethodName, bundleName, argModel.getName(), argModel.getName());
             }
             String fragmentClassName = generateModel.getFragmentElement().getQualifiedName().toString();
-            methodBuilder.addStatement("$T.postHandle(context, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+            if (generateModel.isForResult())
+            {
+                methodBuilder.addStatement("$T.postHandle(fragment, requestCode, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+            }
+            else
+            {
+                methodBuilder.addStatement("$T.postHandle(context, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+            }
             launcherBuilder.addMethod(methodBuilder.build());
         }
         JavaFile javaFile = JavaFile.builder(packageName, launcherBuilder.build()).build();
@@ -278,10 +309,17 @@ public class LaunchProcessor extends AbstractProcessor
 
     private void generateArguments(List<GenerateModel> generateModels)
     {
+        Set<String> classNameSet = new HashSet<>();
         for (GenerateModel generateModel : generateModels)
         {
             String packageName = ElementUtil.getTypeElementPackage(generateModel.getFragmentElement());
             String className = generateModel.getFragmentElement().getSimpleName().toString() + "Arguments";
+            //由于@Launch和LaunchForResult可能同时注解在同一个Fragment上面，这里需要去重
+            if (classNameSet.contains(className))
+            {
+                continue;
+            }
+            classNameSet.add(className);
             TypeSpec.Builder classBuilder = TypeSpec.classBuilder(className)
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
