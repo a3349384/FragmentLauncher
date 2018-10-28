@@ -1,13 +1,34 @@
-1. 引入依赖
+# 引入依赖
 
 ```
-implementation 'cn.zmy:fragmentlauncher-library:1.0.0'
-annatationProcessor 'cn.zmy:fragmentlauncher-compiler:1.0.3'
+implementation 'cn.zmy:fragmentlauncher-library:1.1.0'
+annatationProcessor 'cn.zmy:fragmentlauncher-compiler:1.1.0'
 ```
 
-2. 开始使用
+# 如何启动Fragment
 
-在Fragment上标注`@Launch`注解。
+## 初始化`IFragmentLaunchHandler`
+
+
+```
+public class FragmentLaunchHandler implements IFragmentLaunchHandler
+{
+    @Override
+    public void handle(Context context, String fragmentClass, Bundle arguments)
+    {
+        //fragmentClass为即将启动的Fragment的完整类名。
+        //arguments为启动这个Fragment需要的参数。
+        //在这里需要你自己实现如何将Fragment放入Activity中
+    }
+}
+
+// 推荐放置于Application#onCreate
+FragmentLauncher.init(new FragmentLaunchHandler());
+```
+
+## 添加注解
+
+在某个Fragment上标注`@Launch`注解。
 
 ```
 @Launch(name = "startToTest")
@@ -17,7 +38,13 @@ public class TestFragment extends Fragment
 }
 ```
 
-如果这个Fragment需要携带参数启动，可以标注`@Arg`或者`@ArrayListArg`注解。
+Build之后，会生成Launcher#startToTest方法，方法签名如下：
+
+```
+public static void startToTest(Context context);
+```
+
+如果此Fragment需要启动参数，可以通过标注`@Arg`或者`@ArrayListArg`注解指定。
 
 ```
 @Launch(name = "startToTest")
@@ -29,46 +56,32 @@ public class TestFragment extends Fragment
 }
 ```
 
-其中，`@Arg`注解主要用于int、long、double等8种Java基本类型以及相关数组类型和Parcelable类型等。
+`@Arg`注解主要用于int、long、double等8种Java基本类型以及相关数组类型和Parcelable类型等。
 
 `@ArrayListArg`主要用于ArrayList类型，如ArrayList<Integer>.
 
-在Build工程之后，会自动生成`cn.zmy.fragmentlauncher.Launcher`类。类中自动生成了一个方法：
+Build之后，生成的方法签名如下：
 
 ```
-public static void startToTest(Context context, Parcelable[] parcelableArrayArg, ArrayList<Integer> intArrayListArg)
+public static void startToTest(Context context, Parcelable[] parcelableArrayArg, ArrayList<Integer> intArrayListArg);
+```
+
+现在，如果需要启动TestFragment，只需要调用Launcher#startToTest方法。
+
+## 如何在Fragment中获取参数
+
+每一个标注了`@Arg`或者`@ArrayListArg`注解的Fragment，都会自动生成一个辅助类用于解析传递给Fragment的参数。辅助类的名称为Fragment的名称+Arguments。
+比如上面的TestFragment，生成的辅助类就是TestFragmentArguments。
+
+使用辅助类之前，需要先初始化：
+
+```
+//Fragment#onCreate
+@Override
+public void onCreate(Bundle savedInstanceState)
 {
-    ...
+    TestFragmentArguments.instance.init(getArguments());
 }
-```
-
-外部在调用了startToTest方法后，FragmentLauncher会将相关参数打包为一个Bundle，并传递给`cn.zmy.fragmentlauncher.IFragmentLaunchHandler`进行处理。
-
-所以你还需要实现一个`cn.zmy.fragmentlauncher.IFragmentLaunchHandler`来接收Bundle。
-
-```
-public interface IFragmentLaunchHandler
-{
-    void handle(Context context, String fragmentClass, Bundle arguments);
-}
-
-// 推荐放置于Application#onCreate
-FragmentLauncher.init(new FragmentLaunchHandler());
-```
-
-你需要实现这个接口，其中：
-
-- fragmentClass为即将启动的Fragment的完整类名。
-
-- arguments为启动这个Fragment需要的参数。
-
-`FragmentLauncher`为每一个标注了`@Launch`的Fragment生成了一个XXFragmentArguments类用于解析参数。比如上面的TestFragment，
-生成的参数解析类就是TestFragmentArguments。
-
-你需要在适当的时候调用其init方法：
-
-```
-TestFragmentArguments.instance.init(Bundle bundle);
 ```
 
 获取参数：
@@ -78,10 +91,22 @@ Parcelable[] parcelables = TestFragmentArguments.instance.parcelableArrayArg();
 ArrayList<Integer> intArrayList = TestFragmentArguments.instance.intArrayListArg();
 ```
 
-3. 最后
+# startForResult支持
+
+如果某个Fragment需要以startForResult方式启动，可以在其上标注`@LaunchForResult`而不是`@Launch`注解。
+
+标注`@LaunchForResult`的Fragment会生成如下方法：
+
+```
+public static void startToTestForResult(Object object, int requestCode);
+```
+
+object参数可以传递Activity的实例，也可以传递Fragment(android.app.Fragment、android.support.v4.app.Fragment均支持)的实例。
+
+传递Activity实例，则在Activity中接收结果。
+
+传递Fragment实例，则在Fragment中接收结果。
+
+# 最后
 
 目前，FragmentLauncher支持除`SparseArray<? extends Parcelable>`类型之外的所有其他类型的参数。
-
-FragmentLauncher实际上并为真正意义上帮助你启动Fragment，而是通过`@Launcher`、`@Arg`、`@ArrayListArg`等注解帮助你将相关参数打包为Bundle，然后传递给指定的Handler接口。
-
-你需要自己实现Handler接口来完成最终的启动。
