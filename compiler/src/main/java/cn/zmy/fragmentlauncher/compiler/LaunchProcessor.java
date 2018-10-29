@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -22,14 +21,10 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 import cn.zmy.fragmentlauncher.Arg;
@@ -50,6 +45,7 @@ public class LaunchProcessor extends AbstractProcessor
     private Filer mFiler;
     private Elements mElements;
     private Messager mMessager;
+    private IElementArgsParser mElementArgsParser;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv)
@@ -58,6 +54,7 @@ public class LaunchProcessor extends AbstractProcessor
         mFiler = processingEnv.getFiler();
         mElements = processingEnv.getElementUtils();
         mMessager = processingEnv.getMessager();
+        mElementArgsParser = new ElementArgsParser(false);
     }
 
     @Override
@@ -75,7 +72,7 @@ public class LaunchProcessor extends AbstractProcessor
             GenerateModel generateModel = new GenerateModel();
             generateModel.setFragmentElement((TypeElement) element);
             generateModel.setMethodName(element.getAnnotation(Launch.class).name());
-            generateModel.getArgs().addAll(getArgs(element));
+            generateModel.getArgs().addAll(mElementArgsParser.parse(element));
             generateModels.add(generateModel);
         }
         for (Element element : launchForResultElements)
@@ -87,7 +84,7 @@ public class LaunchProcessor extends AbstractProcessor
             GenerateModel generateModel = new GenerateModel();
             generateModel.setFragmentElement((TypeElement) element);
             generateModel.setMethodName(element.getAnnotation(LaunchForResult.class).name());
-            generateModel.getArgs().addAll(getArgs(element));
+            generateModel.getArgs().addAll(mElementArgsParser.parse(element));
             generateModel.setForResult(true);
             generateModels.add(generateModel);
         }
@@ -116,89 +113,6 @@ public class LaunchProcessor extends AbstractProcessor
     public SourceVersion getSupportedSourceVersion()
     {
         return SourceVersion.latestSupported();
-    }
-
-    private List<ArgModel> getArgs(Element element)
-    {
-        List<ArgModel> args = new ArrayList<>();
-        List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
-        for (AnnotationMirror annotationMirror : annotationMirrors)
-        {
-            String annotaionName = annotationMirror.getAnnotationType().toString();
-            boolean isArgs = annotaionName.contentEquals(Args.class.getCanonicalName());
-            boolean isArrayListArgs = annotaionName.contentEquals(ArrayListArgs.class.getCanonicalName());
-            if (isArgs || isArrayListArgs)
-            {
-                Map<? extends ExecutableElement,? extends AnnotationValue> map = annotationMirror.getElementValues();
-                for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
-                {
-                    if (entry.getKey().getSimpleName().contentEquals("value"))
-                    {
-                        List<AnnotationMirror> subAnnotationMirrors = (List<AnnotationMirror>) entry.getValue().getValue();
-                        args.addAll(parseArgs(subAnnotationMirrors, isArrayListArgs));
-                        break;
-                    }
-                }
-                continue;
-            }
-            boolean isArg = annotaionName.contentEquals(Arg.class.getCanonicalName());
-            boolean isArrayListArg = annotaionName.contentEquals(ArrayListArg.class.getCanonicalName());
-            if (isArg || isArrayListArg)
-            {
-                ArgModel argModel = parseArg(annotationMirror, isArrayListArg);
-                if (argModel != null)
-                {
-                    args.add(argModel);
-                }
-            }
-        }
-        return args;
-    }
-
-    private List<ArgModel> parseArgs(List<AnnotationMirror> mirrors, boolean isArrayList)
-    {
-        List<ArgModel> args = new ArrayList<>();
-        if (mirrors == null)
-        {
-            return args;
-        }
-        for (AnnotationMirror argMirror : mirrors)
-        {
-            ArgModel argModel = parseArg(argMirror, isArrayList);
-            if (argModel != null)
-            {
-                args.add(argModel);
-            }
-        }
-        return args;
-    }
-
-    private ArgModel parseArg(AnnotationMirror argMirror, boolean isArrayList)
-    {
-        String name = null;
-        TypeMirror typeMirror = null;
-        Map<? extends ExecutableElement,? extends AnnotationValue> map = argMirror.getElementValues();
-        for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
-        {
-            switch (entry.getKey().getSimpleName().toString())
-            {
-                case "name":
-                {
-                    name = entry.getValue().getValue().toString();
-                    break;
-                }
-                case "type":
-                {
-                    typeMirror = (TypeMirror) entry.getValue().getValue();
-                    break;
-                }
-            }
-        }
-        if (name != null && typeMirror != null)
-        {
-            return new ArgModel(name, typeMirror, isArrayList);
-        }
-        return null;
     }
 
     private void generateLauncher(List<GenerateModel> generateModels)
