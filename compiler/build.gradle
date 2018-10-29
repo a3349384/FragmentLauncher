@@ -17,10 +17,14 @@ dependencies {
 publish {
     userOrg = 'a3349384'
     groupId = 'cn.zmy'
-    artifactId = 'fragmentlauncher-compiler'
+    artifactId = 'fragmentlauncher-compiler-kotlin'
     publishVersion = '1.1.0'
     desc = 'https://github.com/a3349384/FragmentLauncher'
     website = 'https://github.com/a3349384/FragmentLauncher'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }
 
 sourceCompatibility = "1.8"

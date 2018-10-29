@@ -54,7 +54,7 @@ public class LaunchProcessor extends AbstractProcessor
         mFiler = processingEnv.getFiler();
         mElements = processingEnv.getElementUtils();
         mMessager = processingEnv.getMessager();
-        mElementArgsParser = new ElementArgsParser(false);
+        mElementArgsParser = new ElementArgsParser(true);
     }
 
     @Override

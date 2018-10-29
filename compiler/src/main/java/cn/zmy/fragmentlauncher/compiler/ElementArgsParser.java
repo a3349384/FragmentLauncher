@@ -32,7 +32,7 @@ public class ElementArgsParser implements IElementArgsParser
         List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
         if (mReverse)
         {
-            Collections.reverse(annotationMirrors);
+            annotationMirrors = reverse(annotationMirrors);
         }
         for (AnnotationMirror annotationMirror : annotationMirrors)
         {
@@ -49,7 +49,7 @@ public class ElementArgsParser implements IElementArgsParser
                         List<AnnotationMirror> subAnnotationMirrors = (List<AnnotationMirror>) entry.getValue().getValue();
                         if (mReverse)
                         {
-                            Collections.reverse(subAnnotationMirrors);
+                            subAnnotationMirrors = reverse(subAnnotationMirrors);
                         }
                         args.addAll(parseArgs(subAnnotationMirrors, isArrayListArgs));
                         break;
@@ -115,5 +115,19 @@ public class ElementArgsParser implements IElementArgsParser
             return new ArgModel(name, typeMirror, isArrayList);
         }
         return null;
+    }
+
+    private List<AnnotationMirror> reverse(List<? extends AnnotationMirror> annotationMirrors)
+    {
+        if (annotationMirrors == null)
+        {
+            return null;
+        }
+        List<AnnotationMirror> newList = new ArrayList<>(annotationMirrors.size());
+        for (int i = annotationMirrors.size() - 1; i >= 0; i--)
+        {
+            newList.add(annotationMirrors.get(i));
+        }
+        return newList;
     }
 }
