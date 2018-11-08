@@ -32,13 +32,6 @@ allprojects {
         maven {
             url 'https://maven.aliyun.com/repository/google'
         }
-        maven {
-            url 'http://118.24.140.14:8081/repository/zmy/'
-            credentials {
-                username 'admin'
-                password 'admin123'
-            }
-        }
     }
 }
 
@@ -46,3 +39,4 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
+apply from: 'repository.gradle'
