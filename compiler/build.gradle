@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'cn.zmy:fragmentlauncher-library:1.2.0.beta3'
+    implementation 'cn.zmy:fragmentlauncher-library:1.2.0'
 //    implementation project(":library")
     implementation 'com.squareup:javapoet:1.10.0'
 }
