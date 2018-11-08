@@ -51,6 +51,8 @@ public class LaunchProcessor extends AbstractProcessor
     private Elements mElements;
     private Messager mMessager;
 
+    private String mBasePackage = "cn.zmy.fragmentlauncher";
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv)
     {
@@ -58,6 +60,11 @@ public class LaunchProcessor extends AbstractProcessor
         mFiler = processingEnv.getFiler();
         mElements = processingEnv.getElementUtils();
         mMessager = processingEnv.getMessager();
+        Map<String, String> options = processingEnv.getOptions();
+        if (options != null && options.containsKey("basePackage"))
+        {
+            mBasePackage = options.get("basePackage");
+        }
     }
 
     @Override
@@ -203,7 +210,6 @@ public class LaunchProcessor extends AbstractProcessor
 
     private void generateLauncher(List<GenerateModel> generateModels)
     {
-        String packageName = "cn.zmy.fragmentlauncher";
         String launcherClassName = "Launcher";
         TypeSpec.Builder launcherBuilder = TypeSpec.classBuilder(launcherClassName)
                                                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
@@ -296,7 +302,7 @@ public class LaunchProcessor extends AbstractProcessor
             }
             launcherBuilder.addMethod(methodBuilder.build());
         }
-        JavaFile javaFile = JavaFile.builder(packageName, launcherBuilder.build()).build();
+        JavaFile javaFile = JavaFile.builder(mBasePackage, launcherBuilder.build()).build();
         try
         {
             javaFile.writeTo(mFiler);

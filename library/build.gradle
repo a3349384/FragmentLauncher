@@ -1,5 +1,6 @@
 apply plugin: 'java-library'
 apply plugin: 'com.novoda.bintray-release'
+apply from: 'maven.gradle'
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
@@ -21,7 +22,7 @@ publish {
     userOrg = 'a3349384'
     groupId = 'cn.zmy'
     artifactId = 'fragmentlauncher-library'
-    publishVersion = '1.1.0'
+    publishVersion = '1.2.0.beta1'
     desc = 'https://github.com/a3349384/FragmentLauncher'
     website = 'https://github.com/a3349384/FragmentLauncher'
 }

@@ -11,19 +11,19 @@ import android.support.v4.app.Fragment;
 
 public class FragmentLauncher
 {
-    private static IFragmentLaunchHandler mHandler;
+    static IFragmentLaunchHandler mHandler;
 
     public static void init(IFragmentLaunchHandler handler)
     {
         mHandler = handler;
     }
 
-    static void postHandle(Context context, String fragmentClass, Bundle arguments)
+    public static void postHandle(Context context, String fragmentClass, Bundle arguments)
     {
         mHandler.handleLaunch(context, fragmentClass, arguments);
     }
 
-    static void postHandle(Object activityOrFragment, int requestCode, String fragmentClass, Bundle arguments)
+    public static void postHandle(Object activityOrFragment, int requestCode, String fragmentClass, Bundle arguments)
     {
         if (activityOrFragment instanceof Activity)
         {

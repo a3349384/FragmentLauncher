@@ -21,6 +21,9 @@ buildscript {
 }
 
 allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public' }
         maven {
@@ -29,9 +32,17 @@ allprojects {
         maven {
             url 'https://maven.aliyun.com/repository/google'
         }
+        maven {
+            url 'http://118.24.140.14:8081/repository/zmy/'
+            credentials {
+                username 'admin'
+                password 'admin123'
+            }
+        }
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
