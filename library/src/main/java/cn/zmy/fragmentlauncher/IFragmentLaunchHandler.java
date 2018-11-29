@@ -11,11 +11,11 @@ import android.support.v4.app.Fragment;
 
 public interface IFragmentLaunchHandler
 {
-    void handleLaunch(Context context, String fragmentClass, Bundle arguments);
+    void handleLaunch(Context context, String fragmentClass, Bundle arguments, String targetActivityCls);
 
-    void handleLaunchForResult(Activity activity, int requestCode, String fragmentClass, Bundle arguments);
+    void handleLaunchForResult(Activity activity, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls);
 
-    void handleLaunchForResult(Fragment fragment, int requestCode, String fragmentClass, Bundle arguments);
+    void handleLaunchForResult(Fragment fragment, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls);
 
-    void handleLaunchForResult(android.app.Fragment fragment, int requestCode, String fragmentClass, Bundle arguments);
+    void handleLaunchForResult(android.app.Fragment fragment, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls);
 }

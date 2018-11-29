@@ -13,7 +13,7 @@ import android.support.v4.app.Fragment;
 public class FragmentLaunchHandler implements IFragmentLaunchHandler
 {
     @Override
-    public void handleLaunch(Context context, String fragmentClass, Bundle arguments)
+    public void handleLaunch(Context context, String fragmentClass, Bundle arguments, String targetActivityCls)
     {
         Intent intent = new Intent(context, LaunchFragmentActivity.class);
         intent.putExtra("fragmentClass", fragmentClass);
@@ -22,7 +22,7 @@ public class FragmentLaunchHandler implements IFragmentLaunchHandler
     }
 
     @Override
-    public void handleLaunchForResult(Activity activity, int requestCode, String fragmentClass, Bundle arguments)
+    public void handleLaunchForResult(Activity activity, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls)
     {
         Intent intent = new Intent(activity, LaunchFragmentActivity.class);
         intent.putExtra("fragmentClass", fragmentClass);
@@ -31,7 +31,7 @@ public class FragmentLaunchHandler implements IFragmentLaunchHandler
     }
 
     @Override
-    public void handleLaunchForResult(Fragment fragment, int requestCode, String fragmentClass, Bundle arguments)
+    public void handleLaunchForResult(Fragment fragment, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls)
     {
         Intent intent = new Intent(fragment.getActivity(), LaunchFragmentActivity.class);
         intent.putExtra("fragmentClass", fragmentClass);
@@ -40,7 +40,7 @@ public class FragmentLaunchHandler implements IFragmentLaunchHandler
     }
 
     @Override
-    public void handleLaunchForResult(android.app.Fragment fragment, int requestCode, String fragmentClass, Bundle arguments)
+    public void handleLaunchForResult(android.app.Fragment fragment, int requestCode, String fragmentClass, Bundle arguments, String targetActivityCls)
     {
         Intent intent = new Intent(fragment.getActivity(), LaunchFragmentActivity.class);
         intent.putExtra("fragmentClass", fragmentClass);

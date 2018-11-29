@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Size;
 import android.util.SizeF;
@@ -15,8 +16,7 @@ import android.view.ViewGroup;
 /**
  * Created by zmy on 2018/9/13.
  */
-@Launch(name = "startToTest")
-@LaunchForResult(name = "startToTestForResult")
+@Launch(name = "startToTest", target = AppCompatActivity.class)
 @Arg(name = "booleanArg", type = boolean.class)
 @Arg(name = "byteArg", type = byte.class)
 @Arg(name = "charArg", type = char.class)

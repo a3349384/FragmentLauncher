@@ -31,13 +31,13 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
 
 import cn.zmy.fragmentlauncher.Arg;
 import cn.zmy.fragmentlauncher.Args;
 import cn.zmy.fragmentlauncher.ArrayListArg;
 import cn.zmy.fragmentlauncher.ArrayListArgs;
 import cn.zmy.fragmentlauncher.Launch;
-import cn.zmy.fragmentlauncher.LaunchForResult;
 
 /**
  * Created by zmy on 2018/9/13.
@@ -71,7 +71,6 @@ public class LaunchProcessor extends AbstractProcessor
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment)
     {
         Set<? extends Element> launchElements = roundEnvironment.getElementsAnnotatedWith(Launch.class);
-        Set<? extends Element> launchForResultElements = roundEnvironment.getElementsAnnotatedWith(LaunchForResult.class);
         List<GenerateModel> generateModels = new ArrayList<>();
         for (Element element : launchElements)
         {
@@ -79,23 +78,14 @@ public class LaunchProcessor extends AbstractProcessor
             {
                 continue;
             }
+
+            Launch launch = element.getAnnotation(Launch.class);
             GenerateModel generateModel = new GenerateModel();
             generateModel.setFragmentElement((TypeElement) element);
-            generateModel.setMethodName(element.getAnnotation(Launch.class).name());
+            generateModel.setMethodName(launch.name());
+            generateModel.setForResult(launch.forResult());
             generateModel.getArgs().addAll(getArgs(element));
-            generateModels.add(generateModel);
-        }
-        for (Element element : launchForResultElements)
-        {
-            if (element.getKind() != ElementKind.CLASS)
-            {
-                continue;
-            }
-            GenerateModel generateModel = new GenerateModel();
-            generateModel.setFragmentElement((TypeElement) element);
-            generateModel.setMethodName(element.getAnnotation(LaunchForResult.class).name());
-            generateModel.getArgs().addAll(getArgs(element));
-            generateModel.setForResult(true);
+            generateModel.setTargetActivityClassName(getTargetActivityClassName(element));
             generateModels.add(generateModel);
         }
         if (generateModels.size() > 0)
@@ -111,7 +101,6 @@ public class LaunchProcessor extends AbstractProcessor
     {
         Set<String> types = new HashSet<>();
         types.add(Launch.class.getCanonicalName());
-        types.add(LaunchForResult.class.getCanonicalName());
         types.add(Args.class.getCanonicalName());
         types.add(ArrayListArgs.class.getCanonicalName());
         types.add(Arg.class.getCanonicalName());
@@ -131,9 +120,9 @@ public class LaunchProcessor extends AbstractProcessor
         List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
         for (AnnotationMirror annotationMirror : annotationMirrors)
         {
-            String annotaionName = annotationMirror.getAnnotationType().toString();
-            boolean isArgs = annotaionName.contentEquals(Args.class.getCanonicalName());
-            boolean isArrayListArgs = annotaionName.contentEquals(ArrayListArgs.class.getCanonicalName());
+            String annotationName = annotationMirror.getAnnotationType().toString();
+            boolean isArgs = annotationName.contentEquals(Args.class.getCanonicalName());
+            boolean isArrayListArgs = annotationName.contentEquals(ArrayListArgs.class.getCanonicalName());
             if (isArgs || isArrayListArgs)
             {
                 Map<? extends ExecutableElement,? extends AnnotationValue> map = annotationMirror.getElementValues();
@@ -148,8 +137,8 @@ public class LaunchProcessor extends AbstractProcessor
                 }
                 continue;
             }
-            boolean isArg = annotaionName.contentEquals(Arg.class.getCanonicalName());
-            boolean isArrayListArg = annotaionName.contentEquals(ArrayListArg.class.getCanonicalName());
+            boolean isArg = annotationName.contentEquals(Arg.class.getCanonicalName());
+            boolean isArrayListArg = annotationName.contentEquals(ArrayListArg.class.getCanonicalName());
             if (isArg || isArrayListArg)
             {
                 ArgModel argModel = parseArg(annotationMirror, isArrayListArg);
@@ -206,6 +195,44 @@ public class LaunchProcessor extends AbstractProcessor
             return new ArgModel(name, typeMirror, isArrayList);
         }
         return null;
+    }
+
+    private String getTargetActivityClassName(Element element)
+    {
+        List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
+        AnnotationMirror launchAnnotationMirror = null;
+        for (AnnotationMirror annotationMirror : annotationMirrors)
+        {
+            String annotationName = annotationMirror.getAnnotationType().toString();
+            if (annotationName.contentEquals(Launch.class.getCanonicalName()))
+            {
+                launchAnnotationMirror = annotationMirror;
+                break;
+            }
+        }
+        if (launchAnnotationMirror == null)
+        {
+            mMessager.printMessage(Diagnostic.Kind.ERROR, "AAA:launchAnnotationMirror == null");
+            return null;
+        }
+        TypeMirror typeMirror = null;
+        Map<? extends ExecutableElement,? extends AnnotationValue> map = launchAnnotationMirror.getElementValues();
+        for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+        {
+            switch (entry.getKey().getSimpleName().toString())
+            {
+                case "target":
+                {
+                    typeMirror = (TypeMirror) entry.getValue().getValue();
+                    break;
+                }
+            }
+        }
+        if(typeMirror == null)
+        {
+            return null;
+        }
+        return typeMirror.toString();
     }
 
     private void generateLauncher(List<GenerateModel> generateModels)
@@ -292,13 +319,14 @@ public class LaunchProcessor extends AbstractProcessor
                 methodBuilder.addStatement("$T.$L($L, $S, $L)", TypeNames.BundleHelper, callMethodName, bundleName, argModel.getName(), argModel.getName());
             }
             String fragmentClassName = generateModel.getFragmentElement().getQualifiedName().toString();
+            String targetActivityClassName = generateModel.getTargetActivityClassName();
             if (generateModel.isForResult())
             {
-                methodBuilder.addStatement("$T.postHandle(fragment, requestCode, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+                methodBuilder.addStatement("$T.postHandle(fragment, requestCode, $S, bundle, $S)", TypeNames.FragmentLauncher, fragmentClassName, targetActivityClassName);
             }
             else
             {
-                methodBuilder.addStatement("$T.postHandle(context, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+                methodBuilder.addStatement("$T.postHandle(context, $S, bundle, $S)", TypeNames.FragmentLauncher, fragmentClassName, targetActivityClassName);
             }
             launcherBuilder.addMethod(methodBuilder.build());
         }
@@ -360,7 +388,7 @@ public class LaunchProcessor extends AbstractProcessor
                 }
                 else
                 {
-                     returnType = TypeName.get(argModel.getTypeMirror());
+                    returnType = TypeName.get(argModel.getTypeMirror());
                 }
                 MethodSpec.Builder argMethodBuilder = MethodSpec.methodBuilder(argModel.getName())
                         .addModifiers(Modifier.PUBLIC)
