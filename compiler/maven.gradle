@@ -19,7 +19,7 @@ uploadArchives {
             }
             pom.project {
                 name 'fragmentlauncher-compiler'
-                version '1.3.0.beta1'
+                version '1.3.0'
                 artifactId 'fragmentlauncher-compiler'
                 groupId 'cn.zmy'
                 packaging 'jar'
