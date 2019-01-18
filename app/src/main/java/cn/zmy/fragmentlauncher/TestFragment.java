@@ -1,11 +1,9 @@
 package cn.zmy.fragmentlauncher;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Size;
 import android.util.SizeF;
@@ -16,7 +14,7 @@ import android.view.ViewGroup;
 /**
  * Created by zmy on 2018/9/13.
  */
-@Launch(name = "startToTest", target = AppCompatActivity.class)
+@Launch(name = "startToTest")
 @Arg(name = "booleanArg", type = boolean.class)
 @Arg(name = "byteArg", type = byte.class)
 @Arg(name = "charArg", type = char.class)
@@ -66,20 +64,6 @@ public class TestFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_test, container, false);
-        view.findViewById(R.id.viewSetResult).setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                onSetResultClick(v);
-            }
-        });
         return view;
-    }
-
-    public void onSetResultClick(View view)
-    {
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().finish();
     }
 }

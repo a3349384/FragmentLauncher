@@ -5,17 +5,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cn.zmy.fragmentlauncher.MainActivity"
-    android:orientation="vertical">
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Launch Fragment"
-        android:onClick="launchTestFragment"/>
+    android:orientation="vertical"
+    tools:context="cn.zmy.fragmentlauncher.MainFragment">
 
     <Button
+        android:id="@+id/buttonLaunchTest"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Launch Fragment For Result"
-        android:onClick="launchTestFragmentForResult"/>
+        android:text="Launch Fragment"/>
+
+    <Button
+        android:id="@+id/buttonLaunchTestForResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Launch Fragment For Result"/>
 </LinearLayout>
