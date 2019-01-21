@@ -109,6 +109,7 @@ public abstract class AbsFragmentLauncherActivity extends AppCompatActivity
                     .replace(fragmentContainerId, (android.app.Fragment) mFragment)
                     .commit();
         }
+        doOnFragmentFilled(mFragment);
     }
 
     /**
@@ -165,6 +166,11 @@ public abstract class AbsFragmentLauncherActivity extends AppCompatActivity
      * </p>
      * */
     protected abstract Class<?> getDefaultFragmentClass();
+
+    protected void doOnFragmentFilled(Object fragment)
+    {
+
+    }
 
     protected void doOnFragmentAttach(Object fragment)
     {
