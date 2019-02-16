@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 /**
  * Created by zmy on 2018/9/14.
@@ -16,6 +15,7 @@ public class GenerateModel
     private String methodName;
     private List<ArgModel> args;
     private boolean isForResult;
+    private String targetActivityClassName;
 
     public GenerateModel()
     {
@@ -55,5 +55,15 @@ public class GenerateModel
     public void setForResult(boolean forResult)
     {
         isForResult = forResult;
+    }
+
+    public String getTargetActivityClassName()
+    {
+        return targetActivityClassName;
+    }
+
+    public void setTargetActivityClassName(String targetActivityClassName)
+    {
+        this.targetActivityClassName = targetActivityClassName;
     }
 }

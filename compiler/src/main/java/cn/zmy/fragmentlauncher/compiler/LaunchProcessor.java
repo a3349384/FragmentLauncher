@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -21,18 +22,22 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
 
 import cn.zmy.fragmentlauncher.Arg;
 import cn.zmy.fragmentlauncher.Args;
 import cn.zmy.fragmentlauncher.ArrayListArg;
 import cn.zmy.fragmentlauncher.ArrayListArgs;
 import cn.zmy.fragmentlauncher.Launch;
-import cn.zmy.fragmentlauncher.LaunchForResult;
 
 /**
  * Created by zmy on 2018/9/13.
@@ -45,7 +50,8 @@ public class LaunchProcessor extends AbstractProcessor
     private Filer mFiler;
     private Elements mElements;
     private Messager mMessager;
-    private IElementArgsParser mElementArgsParser;
+
+    private String mBasePackage = "cn.zmy.fragmentlauncher";
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv)
@@ -54,14 +60,17 @@ public class LaunchProcessor extends AbstractProcessor
         mFiler = processingEnv.getFiler();
         mElements = processingEnv.getElementUtils();
         mMessager = processingEnv.getMessager();
-        mElementArgsParser = new ElementArgsParser(true);
+        Map<String, String> options = processingEnv.getOptions();
+        if (options != null && options.containsKey("basePackage"))
+        {
+            mBasePackage = options.get("basePackage");
+        }
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment)
     {
         Set<? extends Element> launchElements = roundEnvironment.getElementsAnnotatedWith(Launch.class);
-        Set<? extends Element> launchForResultElements = roundEnvironment.getElementsAnnotatedWith(LaunchForResult.class);
         List<GenerateModel> generateModels = new ArrayList<>();
         for (Element element : launchElements)
         {
@@ -69,23 +78,14 @@ public class LaunchProcessor extends AbstractProcessor
             {
                 continue;
             }
+
+            Launch launch = element.getAnnotation(Launch.class);
             GenerateModel generateModel = new GenerateModel();
             generateModel.setFragmentElement((TypeElement) element);
-            generateModel.setMethodName(element.getAnnotation(Launch.class).name());
-            generateModel.getArgs().addAll(mElementArgsParser.parse(element));
-            generateModels.add(generateModel);
-        }
-        for (Element element : launchForResultElements)
-        {
-            if (element.getKind() != ElementKind.CLASS)
-            {
-                continue;
-            }
-            GenerateModel generateModel = new GenerateModel();
-            generateModel.setFragmentElement((TypeElement) element);
-            generateModel.setMethodName(element.getAnnotation(LaunchForResult.class).name());
-            generateModel.getArgs().addAll(mElementArgsParser.parse(element));
-            generateModel.setForResult(true);
+            generateModel.setMethodName(launch.name());
+            generateModel.setForResult(launch.forResult());
+            generateModel.getArgs().addAll(getArgs(element));
+            generateModel.setTargetActivityClassName(getTargetActivityClassName(element));
             generateModels.add(generateModel);
         }
         if (generateModels.size() > 0)
@@ -101,7 +101,6 @@ public class LaunchProcessor extends AbstractProcessor
     {
         Set<String> types = new HashSet<>();
         types.add(Launch.class.getCanonicalName());
-        types.add(LaunchForResult.class.getCanonicalName());
         types.add(Args.class.getCanonicalName());
         types.add(ArrayListArgs.class.getCanonicalName());
         types.add(Arg.class.getCanonicalName());
@@ -115,17 +114,137 @@ public class LaunchProcessor extends AbstractProcessor
         return SourceVersion.latestSupported();
     }
 
+    private List<ArgModel> getArgs(Element element)
+    {
+        List<ArgModel> args = new ArrayList<>();
+        List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
+        for (AnnotationMirror annotationMirror : annotationMirrors)
+        {
+            String annotationName = annotationMirror.getAnnotationType().toString();
+            boolean isArgs = annotationName.contentEquals(Args.class.getCanonicalName());
+            boolean isArrayListArgs = annotationName.contentEquals(ArrayListArgs.class.getCanonicalName());
+            if (isArgs || isArrayListArgs)
+            {
+                Map<? extends ExecutableElement,? extends AnnotationValue> map = annotationMirror.getElementValues();
+                for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+                {
+                    if (entry.getKey().getSimpleName().contentEquals("value"))
+                    {
+                        List<AnnotationMirror> subAnnotationMirrors = (List<AnnotationMirror>) entry.getValue().getValue();
+                        args.addAll(parseArgs(subAnnotationMirrors, isArrayListArgs));
+                        break;
+                    }
+                }
+                continue;
+            }
+            boolean isArg = annotationName.contentEquals(Arg.class.getCanonicalName());
+            boolean isArrayListArg = annotationName.contentEquals(ArrayListArg.class.getCanonicalName());
+            if (isArg || isArrayListArg)
+            {
+                ArgModel argModel = parseArg(annotationMirror, isArrayListArg);
+                if (argModel != null)
+                {
+                    args.add(argModel);
+                }
+            }
+        }
+        return args;
+    }
+
+    private List<ArgModel> parseArgs(List<AnnotationMirror> mirrors, boolean isArrayList)
+    {
+        List<ArgModel> args = new ArrayList<>();
+        if (mirrors == null)
+        {
+            return args;
+        }
+        for (AnnotationMirror argMirror : mirrors)
+        {
+            ArgModel argModel = parseArg(argMirror, isArrayList);
+            if (argModel != null)
+            {
+                args.add(argModel);
+            }
+        }
+        return args;
+    }
+
+    private ArgModel parseArg(AnnotationMirror argMirror, boolean isArrayList)
+    {
+        String name = null;
+        TypeMirror typeMirror = null;
+        Map<? extends ExecutableElement,? extends AnnotationValue> map = argMirror.getElementValues();
+        for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+        {
+            switch (entry.getKey().getSimpleName().toString())
+            {
+                case "name":
+                {
+                    name = entry.getValue().getValue().toString();
+                    break;
+                }
+                case "type":
+                {
+                    typeMirror = (TypeMirror) entry.getValue().getValue();
+                    break;
+                }
+            }
+        }
+        if (name != null && typeMirror != null)
+        {
+            return new ArgModel(name, typeMirror, isArrayList);
+        }
+        return null;
+    }
+
+    private String getTargetActivityClassName(Element element)
+    {
+        List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
+        AnnotationMirror launchAnnotationMirror = null;
+        for (AnnotationMirror annotationMirror : annotationMirrors)
+        {
+            String annotationName = annotationMirror.getAnnotationType().toString();
+            if (annotationName.contentEquals(Launch.class.getCanonicalName()))
+            {
+                launchAnnotationMirror = annotationMirror;
+                break;
+            }
+        }
+        if (launchAnnotationMirror == null)
+        {
+            mMessager.printMessage(Diagnostic.Kind.ERROR, "AAA:launchAnnotationMirror == null");
+            return null;
+        }
+        TypeMirror typeMirror = null;
+        Map<? extends ExecutableElement,? extends AnnotationValue> map = launchAnnotationMirror.getElementValues();
+        for (Map.Entry<? extends ExecutableElement,? extends AnnotationValue> entry : map.entrySet())
+        {
+            switch (entry.getKey().getSimpleName().toString())
+            {
+                case "target":
+                {
+                    typeMirror = (TypeMirror) entry.getValue().getValue();
+                    break;
+                }
+            }
+        }
+        if(typeMirror == null)
+        {
+            return null;
+        }
+        return typeMirror.toString();
+    }
+
     private void generateLauncher(List<GenerateModel> generateModels)
     {
-        String packageName = "cn.zmy.fragmentlauncher";
         String launcherClassName = "Launcher";
         TypeSpec.Builder launcherBuilder = TypeSpec.classBuilder(launcherClassName)
-                                                   .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
         for (GenerateModel generateModel : generateModels)
         {
             MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(generateModel.getMethodName())
-                                                                .returns(TypeName.VOID)
-                                                                .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+                    .returns(TypeName.VOID)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
             if (generateModel.isForResult())
             {
                 methodBuilder.addParameter(ClassName.OBJECT, "fragment");
@@ -200,17 +319,18 @@ public class LaunchProcessor extends AbstractProcessor
                 methodBuilder.addStatement("$T.$L($L, $S, $L)", TypeNames.BundleHelper, callMethodName, bundleName, argModel.getName(), argModel.getName());
             }
             String fragmentClassName = generateModel.getFragmentElement().getQualifiedName().toString();
+            String targetActivityClassName = generateModel.getTargetActivityClassName();
             if (generateModel.isForResult())
             {
-                methodBuilder.addStatement("$T.postHandle(fragment, requestCode, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+                methodBuilder.addStatement("$T.postHandle(fragment, requestCode, $S, bundle, $S)", TypeNames.FragmentLauncher, fragmentClassName, targetActivityClassName);
             }
             else
             {
-                methodBuilder.addStatement("$T.postHandle(context, $S, bundle)", TypeNames.FragmentLauncher, fragmentClassName);
+                methodBuilder.addStatement("$T.postHandle(context, $S, bundle, $S)", TypeNames.FragmentLauncher, fragmentClassName, targetActivityClassName);
             }
             launcherBuilder.addMethod(methodBuilder.build());
         }
-        JavaFile javaFile = JavaFile.builder(packageName, launcherBuilder.build()).build();
+        JavaFile javaFile = JavaFile.builder(mBasePackage, launcherBuilder.build()).build();
         try
         {
             javaFile.writeTo(mFiler);
@@ -268,7 +388,7 @@ public class LaunchProcessor extends AbstractProcessor
                 }
                 else
                 {
-                     returnType = TypeName.get(argModel.getTypeMirror());
+                    returnType = TypeName.get(argModel.getTypeMirror());
                 }
                 MethodSpec.Builder argMethodBuilder = MethodSpec.methodBuilder(argModel.getName())
                         .addModifiers(Modifier.PUBLIC)
