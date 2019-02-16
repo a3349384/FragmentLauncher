@@ -1,5 +1,6 @@
 apply plugin: 'java-library'
 apply plugin: 'com.novoda.bintray-release'
+//apply from: 'maven.gradle'
 
 repositories {
     maven {
@@ -9,7 +10,7 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'cn.zmy:fragmentlauncher-library:1.1.0'
+    implementation 'cn.zmy:fragmentlauncher-library:1.4.1'
 //    implementation project(":library")
     implementation 'com.squareup:javapoet:1.10.0'
 }
@@ -18,7 +19,7 @@ publish {
     userOrg = 'a3349384'
     groupId = 'cn.zmy'
     artifactId = 'fragmentlauncher-compiler'
-    publishVersion = '1.1.0'
+    publishVersion = '1.4.1'
     desc = 'https://github.com/a3349384/FragmentLauncher'
     website = 'https://github.com/a3349384/FragmentLauncher'
 }

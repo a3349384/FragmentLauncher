@@ -4,18 +4,25 @@
 implementation 'cn.zmy:fragmentlauncher-library:1.4.1'
 annatationProcessor 'cn.zmy:fragmentlauncher-compiler:1.4.1'
 ```
-# 初始化
+
+# 如何启动Fragment
+
+# 初始化`IFragmentLaunchHandler`
 
 ```
-FragmentLauncher.init(new AbsFragmentLaunchHandler()
+public class FragmentLaunchHandler implements IFragmentLaunchHandler
 {
     @Override
-    protected Class<? extends Activity> getDefaultActivityClass()
+    public void handle(Context context, String fragmentClass, Bundle arguments)
     {
-        //返回一个默认的Activity类，用于装载Fragment
-        //这个Activity可以继承自`cn.zmy.fragmentlauncher.impl.AbsFragmentLauncherActivity`
+        //fragmentClass为即将启动的Fragment的完整类名。
+        //arguments为启动这个Fragment需要的参数。
+        //在这里需要你自己实现如何将Fragment放入Activity中
     }
-});
+}
+
+// 推荐放置于Application#onCreate
+FragmentLauncher.init(new FragmentLaunchHandler());
 ```
 
 # 添加注解
@@ -30,19 +37,23 @@ public class TestFragment extends Fragment
 }
 ```
 
-Build之后，会生成一个`cn.zmy.fragmentlauncher.Launcher`类,Launcher类中包含一个以`@Launch`的`name`参数指定的名称的方法：
-
-
+Build之后，会生成一个Launcher类：
 
 ```
 package cn.zmy.fragmentlauncher;
 
+import android.content.Context;
+import android.os.Bundle;
+
 public final class Launcher {
   public static void startToTest(Context context) {
-      ...
+    Bundle bundle = new Bundle();
+    FragmentLauncher.postHandle(context, "cn.zmy.fragmentlauncher.TestFragment", bundle, null);
   }
 }
 ```
+
+Launcher是根据`@Launch(name = "startToTest")`生成的，方法的名称就是`name`参数的值。
 
 如果此Fragment需要参数启动，可以通过标注`@Arg`或者`@ArrayListArg`注解指定。
 
@@ -65,7 +76,10 @@ Build之后，生成的方法如下：
 ```
 public static void startToTest(Context context, Parcelable[] parcelableArrayArg,
     ArrayList<Integer> intArrayListArg) {
-    ...
+  Bundle bundle = new Bundle();
+  BundleHelper.fillBundle(bundle, "parcelableArrayArg", parcelableArrayArg);
+  BundleHelper.fillBundleIntArrayList(bundle, "intArrayListArg", intArrayListArg);
+  FragmentLauncher.postHandle(context, "cn.zmy.fragmentlauncher.DemoFragment", bundle, null);
 }
 ```
 
@@ -110,7 +124,8 @@ Build之后会生成如下方法：
 
 ```
 public static void startToTestForResult(Object fragmentOrActivity, int requestCode) {
-    ...
+  Bundle bundle = new Bundle();
+  FragmentLauncher.postHandle(fragment, requestCode, "cn.zmy.fragmentlauncher.TestResultFragment", bundle, null);
 }
 ```
 

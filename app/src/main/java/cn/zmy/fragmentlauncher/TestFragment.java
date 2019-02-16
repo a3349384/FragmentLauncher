@@ -1,6 +1,5 @@
 package cn.zmy.fragmentlauncher;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -16,7 +15,6 @@ import android.view.ViewGroup;
  * Created by zmy on 2018/9/13.
  */
 @Launch(name = "startToTest")
-@LaunchForResult(name = "startToTestForResult")
 @Arg(name = "booleanArg", type = boolean.class)
 @Arg(name = "byteArg", type = byte.class)
 @Arg(name = "charArg", type = char.class)
@@ -66,20 +64,6 @@ public class TestFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
     {
         View view = inflater.inflate(R.layout.fragment_test, container, false);
-        view.findViewById(R.id.viewSetResult).setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                onSetResultClick(v);
-            }
-        });
         return view;
-    }
-
-    public void onSetResultClick(View view)
-    {
-        getActivity().setResult(Activity.RESULT_OK);
-        getActivity().finish();
     }
 }
