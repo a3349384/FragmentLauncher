@@ -281,6 +281,13 @@ public class LaunchProcessor extends AbstractProcessor
                             argTypeName = TypeNames.ArrayListParcelable;
                             break;
                         }
+                        default:
+                        {
+                            //视为Parcelable的子类
+                            argTypeName = ParameterizedTypeName.get(TypeNames.ArrayList,
+                                    TypeName.get(argModel.getTypeMirror()));
+                            break;
+                        }
                     }
                 }
                 methodBuilder.addParameter(argTypeName, argModel.getName());
@@ -310,6 +317,7 @@ public class LaunchProcessor extends AbstractProcessor
                             break;
                         }
                         case "android.os.Parcelable":
+                        default:
                         {
                             callMethodName = "fillBundleParcelableArrayList";
                             break;

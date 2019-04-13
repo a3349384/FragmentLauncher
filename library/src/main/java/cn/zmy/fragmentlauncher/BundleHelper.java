@@ -165,7 +165,7 @@ public class BundleHelper
         bundle.putCharSequenceArrayList(name, value);
     }
 
-    public static void fillBundleParcelableArrayList(Bundle bundle, String name, ArrayList<Parcelable> value)
+    public static void fillBundleParcelableArrayList(Bundle bundle, String name, ArrayList<? extends Parcelable> value)
     {
         bundle.putParcelableArrayList(name, value);
     }
