@@ -1,15 +1,9 @@
 apply plugin: 'java-library'
 apply from: 'maven.gradle'
 
-repositories {
-    maven {
-        url 'https://dl.bintray.com/a3349384/maven'
-    }
-}
-
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'cn.zmy:fragmentlauncher-library:1.4.2.beta2'
+    implementation 'cn.zmy:fragmentlauncher-library:1.4.3'
 //    implementation project(":library")
     implementation 'com.squareup:javapoet:1.10.0'
 }
