@@ -1,0 +1,30 @@
+apply plugin: 'maven'
+
+//打包源代码
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.java
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories {
+        mavenDeployer {
+            repository(url: "http://118.24.96.47:26180/repository/android_comm/") {
+                authentication(userName: "zmy", password: "OTU5NjM4ODQ5MDIyOTc5MwaF")
+            }
+            pom.project {
+                name 'fragmentlauncher-library'
+                version '1.4.2.beta2'
+                artifactId 'fragmentlauncher-library'
+                groupId 'cn.zmy'
+                packaging 'jar'
+                description ''
+            }
+        }
+    }
+}

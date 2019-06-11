@@ -1,6 +1,5 @@
 apply plugin: 'java-library'
-apply plugin: 'com.novoda.bintray-release'
-//apply from: 'maven.gradle'
+apply from: 'maven.gradle'
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
@@ -16,15 +15,6 @@ dependencies {
     compileOnly files('libs/internal_impl-compat.jar')
     compileOnly files('libs/internal_impl-core-ui.jar')
     compileOnly files('libs/internal_impl-fragment.jar')
-}
-
-publish {
-    userOrg = 'a3349384'
-    groupId = 'cn.zmy'
-    artifactId = 'fragmentlauncher-library'
-    publishVersion = '1.4.1'
-    desc = 'https://github.com/a3349384/FragmentLauncher'
-    website = 'https://github.com/a3349384/FragmentLauncher'
 }
 
 

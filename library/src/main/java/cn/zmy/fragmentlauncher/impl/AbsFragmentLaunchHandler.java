@@ -64,7 +64,7 @@ public abstract class AbsFragmentLaunchHandler implements IFragmentLaunchHandler
             Intent intent = new Intent(context, targetActivityCls);
             if (context instanceof Application || context instanceof Service)
             {
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
             intent.putExtra(FragmentLauncherConstant.KEY_FRAGMENT_CLASS, fragmentCls);
             intent.putExtra(FragmentLauncherConstant.KEY_ARGS, arguments);
