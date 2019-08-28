@@ -7,14 +7,20 @@ targetCompatibility = "1.8"
 dependencies {
 //    implementation fileTree(include: ['*.jar'], dir: 'libs')
     compileOnly files('libs/android-ori.jar')
-    compileOnly files('libs/support-compat.jar')
-    compileOnly files('libs/core-ui.jar')
-    compileOnly files('libs/core-utils.jar')
-    compileOnly files('libs/support-fragment.jar')
-    compileOnly files('libs/support-v7.jar')
-    compileOnly files('libs/internal_impl-compat.jar')
-    compileOnly files('libs/internal_impl-core-ui.jar')
-    compileOnly files('libs/internal_impl-fragment.jar')
+    compileOnly files('libs/androidx-core.jar')
+    compileOnly files('libs/androidx-fragment.jar')
+    compileOnly files('libs/androidx-appcompact.jar')
+    compileOnly files('libs/androidx-collection.jar')
+    compileOnly files('libs/androidx-drawer.jar')
+    compileOnly files('libs/androidx-lifecycle-common.jar')
+    compileOnly files('libs/androidx-lifecycle-viewmodel.jar')
+//    compileOnly files('libs/core-ui.jar')
+//    compileOnly files('libs/core-utils.jar')
+//    compileOnly files('libs/support-fragment.jar')
+//    compileOnly files('libs/support-v7.jar')
+//    compileOnly files('libs/internal_impl-compat.jar')
+//    compileOnly files('libs/internal_impl-core-ui.jar')
+//    compileOnly files('libs/internal_impl-fragment.jar')
 }
 
 

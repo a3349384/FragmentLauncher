@@ -3,10 +3,11 @@ package cn.zmy.fragmentlauncher.impl;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.util.ArraySet;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.collection.ArraySet;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import java.util.Set;
 
@@ -106,8 +107,8 @@ public abstract class AbsFragmentLauncherActivity extends AppCompatActivity
         else if (mFragment instanceof android.app.Fragment)
         {
             getFragmentManager().beginTransaction()
-                    .replace(fragmentContainerId, (android.app.Fragment) mFragment)
-                    .commit();
+                                .replace(fragmentContainerId, (android.app.Fragment) mFragment)
+                                .commit();
         }
         doOnFragmentFilled(mFragment);
     }
@@ -192,7 +193,7 @@ public abstract class AbsFragmentLauncherActivity extends AppCompatActivity
     private class SupportFragmentLifecycleCallbacks extends FragmentManager.FragmentLifecycleCallbacks
     {
         @Override
-        public void onFragmentAttached(FragmentManager fm, android.support.v4.app.Fragment f, Context context)
+        public void onFragmentAttached(FragmentManager fm, Fragment f, Context context)
         {
             super.onFragmentAttached(fm, f, context);
             doOnFragmentAttach(f);
