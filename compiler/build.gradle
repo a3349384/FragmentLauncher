@@ -3,8 +3,8 @@ apply from: 'maven.gradle'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'cn.zmy:fragmentlauncher-library:1.4.3'
-//    implementation project(":library")
+//    implementation 'cn.zmy:fragmentlauncher-library:1.4.3'
+    implementation project(":library")
     implementation 'com.squareup:javapoet:1.10.0'
 }
 

@@ -1,13 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
     repositories {
-        mavenCentral()
+        jcenter()
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.1'
+        classpath 'com.android.tools.build:gradle:3.5.0'
     }
 }
 
@@ -16,14 +15,7 @@ allprojects {
         options.encoding = 'UTF-8'
     }
     repositories {
-        maven {
-            url "http://118.24.96.47:26180/repository/android_comm/"
-            credentials {
-                username 'zmy'
-                password 'OTU5NjM4ODQ5MDIyOTc5MwaF'
-            }
-        }
-        mavenCentral()
+        jcenter()
         google()
     }
 }
