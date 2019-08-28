@@ -1,8 +1,8 @@
 # 引入依赖
 
 ```
-implementation 'cn.zmy:fragmentlauncher-library:1.4.1'
-annatationProcessor 'cn.zmy:fragmentlauncher-compiler:1.4.1'
+implementation 'cn.zmy:fragmentlauncher-library:1.5.0'
+annatationProcessor 'cn.zmy:fragmentlauncher-compiler:1.5.0'
 ```
 # 初始化
 
